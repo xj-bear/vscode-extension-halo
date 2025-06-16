@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-06-16T09:46:01.759Z",
+  "success": true,
+  "haloVersion": "2.21",
+  "extensionVersion": "1.3.0",
+  "testPost": {
+    "name": "4da9f8dc-d46e-49e4-a860-c6a01d7657ae",
+    "title": "测试文章 - 2025/6/16 17:46:01",
+    "url": "https://blog.u2u.fun/archives/test-post-1750067161151",
+    "slug": "test-post-1750067161151"
+  },
+  "apiMethods": {
+    "listMyPosts": "✅ 通过",
+    "createMyPost": "✅ 通过",
+    "publishMyPost": "✅ 通过",
+    "getMyPost": "✅ 通过"
+  }
+}
