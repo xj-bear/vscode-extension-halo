@@ -9,8 +9,8 @@ import {
   type Post,
   type Tag,
   type TagList,
-  AttachmentV1alpha1UcApi,
-  PostV1alpha1UcApi,
+  UcApiContentHaloRunV1alpha1AttachmentApi,
+  UcApiContentHaloRunV1alpha1PostApi,
 } from "@halo-dev/api-client";
 import axios, { type AxiosInstance } from "axios";
 import { fileTypeFromFile } from "file-type";
@@ -24,8 +24,8 @@ import path = require("node:path");
 class HaloService {
   private readonly site: Site;
   private readonly apiClient: AxiosInstance;
-  private readonly postApi: PostV1alpha1UcApi;
-  private readonly attachmentApi: AttachmentV1alpha1UcApi;
+  private readonly postApi: UcApiContentHaloRunV1alpha1PostApi;
+  private readonly attachmentApi: UcApiContentHaloRunV1alpha1AttachmentApi;
 
   constructor(site?: Site) {
     if (!site) {
@@ -39,12 +39,12 @@ class HaloService {
       },
     });
     this.apiClient = axiosInstance;
-    this.postApi = new PostV1alpha1UcApi(
+    this.postApi = new UcApiContentHaloRunV1alpha1PostApi(
       undefined,
       site.url,
       axiosInstance,
     );
-    this.attachmentApi = new AttachmentV1alpha1UcApi(
+    this.attachmentApi = new UcApiContentHaloRunV1alpha1AttachmentApi(
       undefined,
       site.url,
       axiosInstance,
@@ -55,9 +55,9 @@ class HaloService {
     name: string,
   ): Promise<{ post: Post; content: Content } | undefined> {
     try {
-      const { data: post } = await this.postApi.getPost({ name });
+      const { data: post } = await this.postApi.getMyPost({ name });
 
-      const { data: snapshot } = await this.postApi.getPostDraft({
+      const { data: snapshot } = await this.postApi.getMyPostDraft({
         name,
         patched: true,
       });
@@ -187,9 +187,9 @@ class HaloService {
       if (params.metadata.name) {
         const { name } = params.metadata;
 
-        await this.postApi.updatePost({ name: name, post: params });
+        await this.postApi.updateMyPost({ name: name, post: params });
 
-        const { data: snapshot } = await this.postApi.getPostDraft({
+        const { data: snapshot } = await this.postApi.getMyPostDraft({
           name,
           patched: true,
         });
@@ -199,7 +199,7 @@ class HaloService {
           "content.halo.run/content-json": JSON.stringify(content),
         };
 
-        await this.postApi.updatePostDraft({
+        await this.postApi.updateMyPostDraft({
           name,
           snapshot,
         });
@@ -217,7 +217,7 @@ class HaloService {
           "content.halo.run/content-json": JSON.stringify(content),
         };
 
-        const { data: newPost } = await this.postApi.createPost({
+        const { data: newPost } = await this.postApi.createMyPost({
           post: params,
         });
 
@@ -228,16 +228,16 @@ class HaloService {
       if (matterData?.halo?.hasOwnProperty("publish")) {
         // Publish post
         if (matterData.halo?.publish) {
-          await this.postApi.publishPost({ name: params.metadata.name });
+          await this.postApi.publishMyPost({ name: params.metadata.name });
         } else {
-          await this.postApi.unpublishPost({ name: params.metadata.name });
+          await this.postApi.unpublishMyPost({ name: params.metadata.name });
         }
       } else {
         const postConfiguration =
           vscode.workspace.getConfiguration("halo.post");
 
         if (postConfiguration.get<boolean>("publishByDefault")) {
-          await this.postApi.publishPost({ name: params.metadata.name });
+          await this.postApi.publishMyPost({ name: params.metadata.name });
         }
       }
 
@@ -460,7 +460,7 @@ class HaloService {
   }
 
   public async getPosts(): Promise<ListedPost[]> {
-    const { data: posts } = await this.postApi.listPosts({
+    const { data: posts } = await this.postApi.listMyPosts({
       labelSelector: [ "content.halo.run/deleted=false" ],
     });
     return Promise.resolve(posts.items);
