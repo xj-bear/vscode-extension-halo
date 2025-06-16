@@ -49,7 +49,7 @@ export default async () => {
     );
 
     // Check if the pat is valid
-    await postApi.listPosts();
+    await postApi.listMyPosts();
 
     siteStore.registerSite({
       url,

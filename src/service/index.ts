@@ -2,15 +2,15 @@ import { File } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs";
 import {
+  AttachmentV1alpha1UcApi,
   type Category,
   type CategoryList,
   type Content,
   type ListedPost,
   type Post,
+  PostV1alpha1UcApi,
   type Tag,
   type TagList,
-  AttachmentV1alpha1UcApi,
-  PostV1alpha1UcApi,
 } from "@halo-dev/api-client";
 import axios, { type AxiosInstance } from "axios";
 import { fileTypeFromFile } from "file-type";
@@ -39,11 +39,7 @@ class HaloService {
       },
     });
     this.apiClient = axiosInstance;
-    this.postApi = new PostV1alpha1UcApi(
-      undefined,
-      site.url,
-      axiosInstance,
-    );
+    this.postApi = new PostV1alpha1UcApi(undefined, site.url, axiosInstance);
     this.attachmentApi = new AttachmentV1alpha1UcApi(
       undefined,
       site.url,
@@ -55,9 +51,9 @@ class HaloService {
     name: string,
   ): Promise<{ post: Post; content: Content } | undefined> {
     try {
-      const { data: post } = await this.postApi.getPost({ name });
+      const { data: post } = await this.postApi.getMyPost({ name });
 
-      const { data: snapshot } = await this.postApi.getPostDraft({
+      const { data: snapshot } = await this.postApi.getMyPostDraft({
         name,
         patched: true,
       });
@@ -187,9 +183,9 @@ class HaloService {
       if (params.metadata.name) {
         const { name } = params.metadata;
 
-        await this.postApi.updatePost({ name: name, post: params });
+        await this.postApi.updateMyPost({ name: name, post: params });
 
-        const { data: snapshot } = await this.postApi.getPostDraft({
+        const { data: snapshot } = await this.postApi.getMyPostDraft({
           name,
           patched: true,
         });
@@ -199,7 +195,7 @@ class HaloService {
           "content.halo.run/content-json": JSON.stringify(content),
         };
 
-        await this.postApi.updatePostDraft({
+        await this.postApi.updateMyPostDraft({
           name,
           snapshot,
         });
@@ -217,7 +213,7 @@ class HaloService {
           "content.halo.run/content-json": JSON.stringify(content),
         };
 
-        const { data: newPost } = await this.postApi.createPost({
+        const { data: newPost } = await this.postApi.createMyPost({
           post: params,
         });
 
@@ -228,16 +224,16 @@ class HaloService {
       if (matterData?.halo?.hasOwnProperty("publish")) {
         // Publish post
         if (matterData.halo?.publish) {
-          await this.postApi.publishPost({ name: params.metadata.name });
+          await this.postApi.publishMyPost({ name: params.metadata.name });
         } else {
-          await this.postApi.unpublishPost({ name: params.metadata.name });
+          await this.postApi.unpublishMyPost({ name: params.metadata.name });
         }
       } else {
         const postConfiguration =
           vscode.workspace.getConfiguration("halo.post");
 
         if (postConfiguration.get<boolean>("publishByDefault")) {
-          await this.postApi.publishPost({ name: params.metadata.name });
+          await this.postApi.publishMyPost({ name: params.metadata.name });
         }
       }
 
@@ -460,8 +456,8 @@ class HaloService {
   }
 
   public async getPosts(): Promise<ListedPost[]> {
-    const { data: posts } = await this.postApi.listPosts({
-      labelSelector: [ "content.halo.run/deleted=false" ],
+    const { data: posts } = await this.postApi.listMyPosts({
+      labelSelector: ["content.halo.run/deleted=false"],
     });
     return Promise.resolve(posts.items);
   }
@@ -538,7 +534,7 @@ class HaloService {
     const fileType = await fileTypeFromFile(file);
 
     const fileBlob = new File(
-      [ fs.readFileSync(decodeURIComponent(file)) ],
+      [fs.readFileSync(decodeURIComponent(file))],
       path.basename(file),
       {
         type: fileType?.mime,
@@ -648,7 +644,7 @@ class HaloService {
       })
       .filter(Boolean) as string[];
 
-    return [ ...existNames, ...newTags.map((item) => item.data.metadata.name) ];
+    return [...existNames, ...newTags.map((item) => item.data.metadata.name)];
   }
 
   public async getTagDisplayNames(names?: string[]): Promise<string[]> {
